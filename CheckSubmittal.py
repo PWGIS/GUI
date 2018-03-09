@@ -92,7 +92,8 @@ class frmCheckSubmital(wx.Frame):
         # Proceed loading the file chosen by the user
         value = fileDialog.Directory + "\\" + fileDialog.Filename
         self.txtPipesPath.SetValue(value)
-
+    # Import features currently only works  on a premade file that has no header and
+    # only has an X, and Y value delimited with a comma
     def importFeatures(self, event):
         arcpy.env.workspace = "D:/Test.gdb"
         f = open("C:/Users/MiguelTo/Desktop/test/swPointTest.txt")
