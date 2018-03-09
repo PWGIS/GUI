@@ -3,7 +3,7 @@
 # Updates 1/26/2018: Created a method that populates a txtCtrl with the fileDialog file path and file name
 # ------------------------------------------------------------------------------
 
-import wx
+import wx, arcpy, os
 
 
 class frmCheckSubmital(wx.Frame):
@@ -17,11 +17,12 @@ class frmCheckSubmital(wx.Frame):
         self.txtPipesPath = wx.TextCtrl(self, wx.ID_ANY, "")
         self.btnSelectPipes = wx.Button(self, wx.ID_ANY, "Select")
         self.btnSelectPipes.Bind(wx.EVT_BUTTON, self.dialogSelectPipes)
-        self.bxOutput = wx.Panel(self, wx.ID_ANY)
+        self.bxOutput = wx.TextCtrl(self, wx.ID_ANY, "", style=wx.TE_MULTILINE|wx.TE_READONLY)
         self.cbxDraw = wx.CheckBox(self, wx.ID_ANY, "Draw")
         self.btnClear = wx.Button(self, wx.ID_ANY, "Clear")
         self.btnZoom = wx.Button(self, wx.ID_ANY, "Zoom")
         self.btnRun = wx.Button(self, wx.ID_ANY, "Run", style=wx.BU_EXACTFIT)
+        self.btnRun.Bind(wx.EVT_BUTTON, self.importFeatures)
 
         self.__set_properties()
         self.__do_layout()
@@ -91,6 +92,39 @@ class frmCheckSubmital(wx.Frame):
         # Proceed loading the file chosen by the user
         value = fileDialog.Directory + "\\" + fileDialog.Filename
         self.txtPipesPath.SetValue(value)
+    # Import features currently only works  on a premade file that has no header and
+    # only has an X, and Y value delimited with a comma
+    def importFeatures(self, event):
+        arcpy.env.workspace = "D:/Test.gdb"
+        f = open("C:/Users/MiguelTo/Desktop/test/swPointTest.txt")
+        lstNodes = f.readlines()
+        self.bxOutput.SetValue("")
+
+        try:
+            edit = arcpy.da.Editor(r"D:/Test.gdb")
+            edit.startEditing(True)
+            cntr = 0
+            with arcpy.da.InsertCursor("D:/Test.gdb/swNodesTest", ("SHAPE@XY", "ASBUILTID", "PROJECTID")) as cur:
+                for node in lstNodes:
+                    cntr += 1
+                    vals = node.split(",")
+                    latitude = float(vals[0])
+                    longitude = float(vals[1])
+                    ABID = "FTR-" + str(cntr)
+                    PID = float(1354.07)
+                    print("Latitude: " + str(latitude) + " x Longitude: " + str(longitude))
+                    self.bxOutput.AppendText("Latitude: " + str(latitude) + " x Longitude: " + str(longitude))
+                    rowValue = [(latitude, longitude), ABID, PID]
+                    self.bxOutput.AppendText("\nABID: " + ABID + " Project: " + str(PID)+"\n")
+                    print(rowValue)
+                    cur.insertRow(rowValue)
+                    self.bxOutput.AppendText("Inserted Node\n")
+                    print("Inserted Node")
+            edit.stopEditing(True)
+        except Exception as e:
+            print(e.message)
+        finally:
+            f.close()
 
 
 if __name__ == '__main__':
