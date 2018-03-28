@@ -6,30 +6,29 @@
 import wx, arcpy, os
 
 
-class frmCheckSubmital(wx.Frame):
+class FrmCheckSubmital(wx.Frame):
     def __init__(self, *args, **kwds):
         kwds["style"] = kwds.get("style", 0) | wx.DEFAULT_FRAME_STYLE
         wx.Frame.__init__(self, *args, **kwds)
         self.rbxUtilitySelect = wx.RadioBox(self, wx.ID_ANY, "Utility", choices=["Stormwater", "Sewer", "Water"], majorDimension=1, style=wx.RA_SPECIFY_ROWS)
         self.txtFeaturesPath = wx.TextCtrl(self, wx.ID_ANY, "")
         self.btnSelectFeatures = wx.Button(self, wx.ID_ANY, "Select")
-        self.btnSelectFeatures.Bind(wx.EVT_BUTTON, self.dialogSelectFeatures)
+        self.btnSelectFeatures.Bind(wx.EVT_BUTTON, self.dialog_select_features)
         self.txtPipesPath = wx.TextCtrl(self, wx.ID_ANY, "")
         self.btnSelectPipes = wx.Button(self, wx.ID_ANY, "Select")
-        self.btnSelectPipes.Bind(wx.EVT_BUTTON, self.dialogSelectPipes)
+        self.btnSelectPipes.Bind(wx.EVT_BUTTON, self.dialog_select_pipes)
         self.bxOutput = wx.TextCtrl(self, wx.ID_ANY, "", style=wx.TE_MULTILINE|wx.TE_READONLY)
         self.cbxDraw = wx.CheckBox(self, wx.ID_ANY, "Draw")
         self.btnClear = wx.Button(self, wx.ID_ANY, "Clear")
         self.btnZoom = wx.Button(self, wx.ID_ANY, "Zoom")
         self.btnRun = wx.Button(self, wx.ID_ANY, "Run", style=wx.BU_EXACTFIT)
-        self.btnRun.Bind(wx.EVT_BUTTON, self.importFeatures)
+        self.btnRun.Bind(wx.EVT_BUTTON, self.import_features)
 
         self.__set_properties()
         self.__do_layout()
 
-
     def __set_properties(self):
-        # begin wxGlade: frmCheckSubmitall.__set_properties
+        # begin wxGlade: FrmCheckSubmitall.__set_properties
         self.SetTitle("Check Submittal")
         self.rbxUtilitySelect.SetSelection(0)
         self.btnSelectFeatures.SetMinSize((80, 20))
@@ -40,7 +39,7 @@ class frmCheckSubmital(wx.Frame):
         # end wxGlade
 
     def __do_layout(self):
-        # begin wxGlade: frmCheckSubmitall.__do_layout
+        # begin wxGlade: FrmCheckSubmitall.__do_layout
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
         sizer_5 = wx.BoxSizer(wx.VERTICAL)
         sizer_8 = wx.BoxSizer(wx.HORIZONTAL)
@@ -69,10 +68,9 @@ class frmCheckSubmital(wx.Frame):
         self.Layout()
         self.SetSize((400, 300))
         # end wxGlade
-# Begin Dialog Method. These two methods are somewhat redundant and may be combined with an argument that parses the
-    # textCtrl outputs depending on the button pressed
-    def dialogSelectFeatures(self, event):
 
+    def dialog_select_features(self, event):
+        # Begin Dialog Features Method.
         fileDialog = wx.FileDialog(self, "Select the Features File", wildcard="Text files (*.txt)|*.txt",
                                    style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
         if fileDialog.ShowModal() == wx.ID_CANCEL:
@@ -82,8 +80,8 @@ class frmCheckSubmital(wx.Frame):
         value = fileDialog.Directory + "\\" + fileDialog.Filename
         self.txtFeaturesPath.SetValue(value)
 
-    def dialogSelectPipes(self, event):
-
+    def dialog_select_pipes(self, event):
+        # Begin Dialog Pipes Method.
         fileDialog = wx.FileDialog(self, "Select the Features File", wildcard="Text files (*.txt)|*.txt",
                                    style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
         if fileDialog.ShowModal() == wx.ID_CANCEL:
@@ -92,86 +90,147 @@ class frmCheckSubmital(wx.Frame):
         # Proceed loading the file chosen by the user
         value = fileDialog.Directory + "\\" + fileDialog.Filename
         self.txtPipesPath.SetValue(value)
-    # Import features currently only works  on a premade file that has no header and
-    # only has an X, and Y value delimited with a comma
 
-    # Determines the order of the input header and returns a dictionary of indexed locations
-    def orderkey(self, header):
+    def verify_input(self):
+        """ Returns a tuple that shows the existence of the two paths provided.
+        The first value represents the Features path, while the second represents the Pipes.
+        """
+        InputTup = (os.path.exists(self.txtFeaturesPath.GetValue()), os.path.exists(self.txtPipesPath.GetValue()))
 
+        return InputTup
+
+    def order_key(self):
+        """ Returns a dictionary where the key is the valid column name
+        the value is the key's position within the input."""
         # prepare the header of the file for processing
-        f = open(self.txtFeaturesPath.GetValue())
-        header = f.readlines()
-        header.reverse()
-        header = header.pop()
-        header = header.upper()
-        header = header.replace("NORTHING", "Y")
-        header = header.replace("EASTING", "X")
-        header = header.replace('\n', '')
-        header = header.split(",")
+        if self.rbxUtilitySelect.GetSelection() == 0:
+            headList = {}
+            if self.verify_input()[0]:
+                f = open(self.txtFeaturesPath.GetValue())
+                fheader = f.readlines()
+                fheader.reverse()
+                fheader = fheader.pop()
+                fheader = fheader.upper()
+                fheader = fheader.replace("NORTHING", "Y")
+                fheader = fheader.replace("EASTING", "X")
+                fheader = fheader.replace('\n', '')
+                fheader = fheader.split(",")
 
+                if "ID" in fheader:
+                    headList["ID"] = fheader.index("ID")
+                if "TYPE" in fheader:
+                    headList["TYPE"] = fheader.index("TYPE")
+                if "Y" in fheader:
+                    headList["Y"] = fheader.index("Y")
+                if "X" in fheader:
+                    headList["X"] = fheader.index("X")
+                if "INVERT" in fheader:
+                    headList["INVERT"] = fheader.index("INVERT")
+                if "MATERIAL" in fheader:
+                    headList["MATERIAL"] = fheader.index("MATERIAL")
+                if "ELEVATION" in fheader:
+                    headList["ELEVATION"] = fheader.index("ELEVATION")
 
-        headList = {}
+                if "ID" not in fheader:
+                    print "Missing ID field in Header"
+                if "TYPE" not in fheader:
+                    print "Missing TYPE field in Header"
+                if "Y" not in fheader:
+                    print "Missing NORTHING field in Header"
+                if "X" not in fheader:
+                    print "Missing EASTING field in Header"
+                if "INVERT" not in fheader:
+                    print "Missing INVERT field in Header"
+                if "MATERIAL" not in fheader:
+                    print "Missing MATERIAL field in Header"
+            else:
+                print "No Valid Features file provided. Skipping Feature import."
 
-        if "ID" in header:
-            headList["ID"] = header.index("ID")
-        if "TYPE" in header:
-            headList["TYPE"] = header.index("TYPE")
-        if "Y" in header:
-            headList["Y"] = header.index("Y")
-        if "X" in header:
-            headList["X"] = header.index("X")
-        if "INVERT" in header:
-            headList["INVERT"] = header.index("INVERT")
-        if "MATERIAL" in header:
-            headList["MATERIAL"] = header.index("MATERIAL")
-        if "ELEVATION" in header:
-            headList["ELEVATION"] = header.index("ELEVATION")
-        return headList
+            headList2 = {}
+            if self.verify_input()[1]:
+                p = open(self.txtPipesPath.GetValue())
+                pheader = p.readlines()
+                pheader.reverse()
+                pheader = pheader.pop()
+                print pheader
+                pheader = pheader.upper()
+                pheader = pheader.replace('\n', '')
+                pheader = pheader.split(",")
+                print pheader
 
-    def importFeatures(self, event):
-        arcpy.env.workspace = "D:/Test.gdb"
-        f = open(self.txtFeaturesPath.GetValue())
-        lstNodes = f.readlines()
-        lstNodes.reverse()
-        lstNodes.pop()
-        self.bxOutput.SetValue("")
-        header = lstNodes.pop()
-        print header
-        okey = self.orderkey(header)
-        print "OKey Value: "
-        print okey
+                if "ID" in pheader:
+                    headList2["ID"] = pheader.index("ID")
+                if "SIZE" in pheader:
+                    headList2["SIZE"] = pheader.index("SIZE")
+                if "MATERIAL" in pheader:
+                    headList2["MATERIAL"] = pheader.index("MATERIAL")
+                if "USID" in pheader:
+                    headList2["USID"] = pheader.index("USID")
+                if "DSID" in pheader:
+                    headList2["DSID"] = pheader.index("DSID")
 
-        try:
-            edit = arcpy.da.Editor(r"D:/Test.gdb")
-            edit.startEditing(True)
-            cntr = 0
-            with arcpy.da.InsertCursor("D:/Test.gdb/swNodesTest", ("SHAPE@XY", "ASBUILTID", "PROJECTID")) as cur:
-                for node in lstNodes:
-                    node = node.replace('\n','')
-                    print node
-                    cntr += 1
-                    vals = node.split(",")
-                    latitude = float(vals[0])
-                    longitude = float(vals[1])
-                    ABID = "FTR-" + str(cntr)
-                    PID = float(1354.07)
-                    print("Latitude: " + str(latitude) + " x Longitude: " + str(longitude))
-                    self.bxOutput.AppendText("Latitude: " + str(latitude) + " x Longitude: " + str(longitude))
-                    rowValue = [(latitude, longitude), ABID, PID]
-                    self.bxOutput.AppendText("\nABID: " + ABID + " Project: " + str(PID)+"\n")
-                    print(rowValue)
-                    cur.insertRow(rowValue)
-                    self.bxOutput.AppendText("Inserted Node\n")
-                    print("Inserted Node")
-            edit.stopEditing(True)
-        except Exception as e:
-            print(e.message)
-        finally:
-            f.close()
+                count = 0
+                for val in pheader:
+                    if val in ['DSINVERT', 'DOWNSTREAM INVERT', 'DSI']:
+                        pheader[val] = "USINV"
+                        break
+                    count = count + 1
+                if "DSINV" in pheader:
+                    headList2["DSINV"] = pheader.index("DSINV")
 
+                count = 0
+                for val in pheader:
+                    if val in ['USINVERT', 'UPSTREAM INVERT', 'USI']:
+                        pheader[val] = "USINV"
+                        break
+                    count = count + 1
+                if "USINV" in pheader:
+                    headList2["USINV"] = pheader.index("USINV")
+
+                if "SLOPE" in pheader:
+                    headList2["SLOPE"] = pheader.index("SLOPE")
+                if "LENGTH" in pheader or "LEN" in pheader:
+                    headList2["LENGTH"] = pheader.index("LENGTH")
+
+                if "ID" not in pheader:
+                    print "Missing ID field in Header"
+                if "SIZE" not in pheader:
+                    print "Missing SIZE field in Header"
+                if "MATERIAL" not in pheader:
+                    print "Missing MATERIAL field in Header"
+                if "USID" not in pheader:
+                    print "Missing USID field in Header"
+                if "DSID" not in pheader:
+                    print "Missing DSID field in Header"
+                if "USINV" not in pheader:
+                    print "Missing USINV field in Header"
+                if "DSINV" not in pheader:
+                    print "Missing DSINV field in Header"
+                if "SLOPE" not in pheader:
+                    print "Missing SLOPE field in Header"
+                if "LENGTH" not in pheader and "LEN" not in pheader:
+                    print "Missing LENGTH field in Header"
+            else:
+                print "No Valid Pipes file provided. Skipping Pipes import."
+            Key = (headList,headList2)
+            return Key
+
+    def import_features(self, event):
+        # Import features currently only works  on a premade file that has no header and
+        # only has an X, and Y value delimited with a comma
+        Key = self.order_key()
+        #
+        print Key
+        if os.path.exists(self.txtFeaturesPath.GetValue()):
+            f = open(self.txtFeaturesPath.GetValue())
+            lstNodes = f.readlines()
+            lstNodes.reverse()
+            lstNodes.pop()
+            self.bxOutput.SetValue("")
+        env = arcpy.da.Editor("in_memory")
 
 if __name__ == '__main__':
     app=wx.App()
-    frame = frmCheckSubmital(parent=None, id=-1)
+    frame = FrmCheckSubmital(parent=None, id=-1)
     frame.Show()
     app.MainLoop()
