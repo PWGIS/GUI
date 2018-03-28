@@ -94,11 +94,52 @@ class frmCheckSubmital(wx.Frame):
         self.txtPipesPath.SetValue(value)
     # Import features currently only works  on a premade file that has no header and
     # only has an X, and Y value delimited with a comma
+
+    # Determines the order of the input header and returns a dictionary of indexed locations
+    def orderkey(self, header):
+
+        # prepare the header of the file for processing
+        f = open(self.txtFeaturesPath.GetValue())
+        header = f.readlines()
+        header.reverse()
+        header = header.pop()
+        header = header.upper()
+        header = header.replace("NORTHING", "Y")
+        header = header.replace("EASTING", "X")
+        header = header.replace('\n', '')
+        header = header.split(",")
+
+
+        headList = {}
+
+        if "ID" in header:
+            headList["ID"] = header.index("ID")
+        if "TYPE" in header:
+            headList["TYPE"] = header.index("TYPE")
+        if "Y" in header:
+            headList["Y"] = header.index("Y")
+        if "X" in header:
+            headList["X"] = header.index("X")
+        if "INVERT" in header:
+            headList["INVERT"] = header.index("INVERT")
+        if "MATERIAL" in header:
+            headList["MATERIAL"] = header.index("MATERIAL")
+        if "ELEVATION" in header:
+            headList["ELEVATION"] = header.index("ELEVATION")
+        return headList
+
     def importFeatures(self, event):
         arcpy.env.workspace = "D:/Test.gdb"
-        f = open("C:/Users/MiguelTo/Desktop/test/swPointTest.txt")
+        f = open(self.txtFeaturesPath.GetValue())
         lstNodes = f.readlines()
+        lstNodes.reverse()
+        lstNodes.pop()
         self.bxOutput.SetValue("")
+        header = lstNodes.pop()
+        print header
+        okey = self.orderkey(header)
+        print "OKey Value: "
+        print okey
 
         try:
             edit = arcpy.da.Editor(r"D:/Test.gdb")
@@ -106,6 +147,8 @@ class frmCheckSubmital(wx.Frame):
             cntr = 0
             with arcpy.da.InsertCursor("D:/Test.gdb/swNodesTest", ("SHAPE@XY", "ASBUILTID", "PROJECTID")) as cur:
                 for node in lstNodes:
+                    node = node.replace('\n','')
+                    print node
                     cntr += 1
                     vals = node.split(",")
                     latitude = float(vals[0])
