@@ -132,19 +132,19 @@ class FrmCheckSubmital(wx.Frame):
                     headList["ELEVATION"] = fheader.index("ELEVATION")
 
                 if "ID" not in fheader:
-                    print "Missing ID field in Header"
+                    self.bxOutput.AppendText("Missing ID field in Header\n")
                 if "TYPE" not in fheader:
-                    print "Missing TYPE field in Header"
+                    self.bxOutput.AppendText("Missing TYPE field in Header\n")
                 if "Y" not in fheader:
-                    print "Missing NORTHING field in Header"
+                    self.bxOutput.AppendText("Missing NORTHING field in Header\n")
                 if "X" not in fheader:
-                    print "Missing EASTING field in Header"
+                    self.bxOutput.AppendText("Missing EASTING field in Header\n")
                 if "INVERT" not in fheader:
-                    print "Missing INVERT field in Header"
+                    self.bxOutput.AppendText("Missing INVERT field in Header\n")
                 if "MATERIAL" not in fheader:
-                    print "Missing MATERIAL field in Header"
+                    self.bxOutput.AppendText("Missing MATERIAL field in Header\n")
             else:
-                print "No Valid Features file provided. Skipping Feature import."
+                self.bxOutput.AppendText("\nNo Valid Features file provided. Skipping Feature import.")
 
             headList2 = {}
             if self.verify_input()[1]:
@@ -152,11 +152,9 @@ class FrmCheckSubmital(wx.Frame):
                 pheader = p.readlines()
                 pheader.reverse()
                 pheader = pheader.pop()
-                print pheader
                 pheader = pheader.upper()
                 pheader = pheader.replace('\n', '')
                 pheader = pheader.split(",")
-                print pheader
 
                 if "ID" in pheader:
                     headList2["ID"] = pheader.index("ID")
@@ -193,40 +191,39 @@ class FrmCheckSubmital(wx.Frame):
                     headList2["LENGTH"] = pheader.index("LENGTH")
 
                 if "ID" not in pheader:
-                    print "Missing ID field in Header"
+                    self.bxOutput.AppendText("Missing ID field in Header\n")
                 if "SIZE" not in pheader:
-                    print "Missing SIZE field in Header"
+                    self.bxOutput.AppendText("Missing SIZE field in Header\n")
                 if "MATERIAL" not in pheader:
-                    print "Missing MATERIAL field in Header"
+                    self.bxOutput.AppendText("Missing MATERIAL field in Header\n")
                 if "USID" not in pheader:
-                    print "Missing USID field in Header"
+                    self.bxOutput.AppendText("Missing USID field in Header\n")
                 if "DSID" not in pheader:
-                    print "Missing DSID field in Header"
+                    self.bxOutput.AppendText("Missing DSID field in Header\n")
                 if "USINV" not in pheader:
-                    print "Missing USINV field in Header"
+                    self.bxOutput.AppendText("Missing USINV field in Header\n")
                 if "DSINV" not in pheader:
-                    print "Missing DSINV field in Header"
+                    self.bxOutput.AppendText("Missing DSINV field in Header\n")
                 if "SLOPE" not in pheader:
-                    print "Missing SLOPE field in Header"
+                    self.bxOutput.AppendText("Missing SLOPE field in Header\n")
                 if "LENGTH" not in pheader and "LEN" not in pheader:
-                    print "Missing LENGTH field in Header"
+                    self.bxOutput.AppendText("Missing LENGTH field in Header\n")
             else:
-                print "No Valid Pipes file provided. Skipping Pipes import."
-            Key = (headList,headList2)
-            return Key
+                self.bxOutput.AppendText("\nNo Valid Pipes file provided. Skipping Pipes import.")
+            key = (headList,headList2)
+            return key
 
     def import_features(self, event):
         # Import features currently only works  on a premade file that has no header and
         # only has an X, and Y value delimited with a comma
+        self.bxOutput.SetValue("")
         Key = self.order_key()
         #
-        print Key
         if os.path.exists(self.txtFeaturesPath.GetValue()):
             f = open(self.txtFeaturesPath.GetValue())
             lstNodes = f.readlines()
             lstNodes.reverse()
             lstNodes.pop()
-            self.bxOutput.SetValue("")
         env = arcpy.da.Editor("in_memory")
 
 if __name__ == '__main__':
