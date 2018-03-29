@@ -103,8 +103,9 @@ class FrmCheckSubmital(wx.Frame):
         """ Returns a dictionary where the key is the valid column name
         the value is the key's position within the input."""
         # prepare the header of the file for processing
-        if self.rbxUtilitySelect.GetSelection() == 0:
-            headList = {}
+        feat_key = {}
+        pipe_key = {}
+        if self.rbxUtilitySelect.GetSelection() == 0 or self.rbxUtilitySelect.GetSelection() == 1:
             if self.verify_input()[0]:
                 f = open(self.txtFeaturesPath.GetValue())
                 fheader = f.readlines()
@@ -117,19 +118,19 @@ class FrmCheckSubmital(wx.Frame):
                 fheader = fheader.split(",")
 
                 if "ID" in fheader:
-                    headList["ID"] = fheader.index("ID")
+                    feat_key["ID"] = fheader.index("ID")
                 if "TYPE" in fheader:
-                    headList["TYPE"] = fheader.index("TYPE")
+                    feat_key["TYPE"] = fheader.index("TYPE")
                 if "Y" in fheader:
-                    headList["Y"] = fheader.index("Y")
+                    feat_key["Y"] = fheader.index("Y")
                 if "X" in fheader:
-                    headList["X"] = fheader.index("X")
+                    feat_key["X"] = fheader.index("X")
                 if "INVERT" in fheader:
-                    headList["INVERT"] = fheader.index("INVERT")
+                    feat_key["INVERT"] = fheader.index("INVERT")
                 if "MATERIAL" in fheader:
-                    headList["MATERIAL"] = fheader.index("MATERIAL")
+                    feat_key["MATERIAL"] = fheader.index("MATERIAL")
                 if "ELEVATION" in fheader:
-                    headList["ELEVATION"] = fheader.index("ELEVATION")
+                    feat_key["ELEVATION"] = fheader.index("ELEVATION")
 
                 if "ID" not in fheader:
                     self.bxOutput.AppendText("Missing ID field in Header\n")
@@ -143,10 +144,6 @@ class FrmCheckSubmital(wx.Frame):
                     self.bxOutput.AppendText("Missing INVERT field in Header\n")
                 if "MATERIAL" not in fheader:
                     self.bxOutput.AppendText("Missing MATERIAL field in Header\n")
-            else:
-                self.bxOutput.AppendText("\nNo Valid Features file provided. Skipping Feature import.")
-
-            headList2 = {}
             if self.verify_input()[1]:
                 p = open(self.txtPipesPath.GetValue())
                 pheader = p.readlines()
@@ -157,15 +154,15 @@ class FrmCheckSubmital(wx.Frame):
                 pheader = pheader.split(",")
 
                 if "ID" in pheader:
-                    headList2["ID"] = pheader.index("ID")
+                    pipe_key["ID"] = pheader.index("ID")
                 if "SIZE" in pheader:
-                    headList2["SIZE"] = pheader.index("SIZE")
+                    pipe_key["SIZE"] = pheader.index("SIZE")
                 if "MATERIAL" in pheader:
-                    headList2["MATERIAL"] = pheader.index("MATERIAL")
+                    pipe_key["MATERIAL"] = pheader.index("MATERIAL")
                 if "USID" in pheader:
-                    headList2["USID"] = pheader.index("USID")
+                    pipe_key["USID"] = pheader.index("USID")
                 if "DSID" in pheader:
-                    headList2["DSID"] = pheader.index("DSID")
+                    pipe_key["DSID"] = pheader.index("DSID")
 
                 count = 0
                 for val in pheader:
@@ -174,7 +171,7 @@ class FrmCheckSubmital(wx.Frame):
                         break
                     count = count + 1
                 if "DSINV" in pheader:
-                    headList2["DSINV"] = pheader.index("DSINV")
+                    pipe_key["DSINV"] = pheader.index("DSINV")
 
                 count = 0
                 for val in pheader:
@@ -183,12 +180,12 @@ class FrmCheckSubmital(wx.Frame):
                         break
                     count = count + 1
                 if "USINV" in pheader:
-                    headList2["USINV"] = pheader.index("USINV")
+                    pipe_key["USINV"] = pheader.index("USINV")
 
                 if "SLOPE" in pheader:
-                    headList2["SLOPE"] = pheader.index("SLOPE")
+                    pipe_key["SLOPE"] = pheader.index("SLOPE")
                 if "LENGTH" in pheader or "LEN" in pheader:
-                    headList2["LENGTH"] = pheader.index("LENGTH")
+                    pipe_key["LENGTH"] = pheader.index("LENGTH")
 
                 if "ID" not in pheader:
                     self.bxOutput.AppendText("Missing ID field in Header\n")
@@ -210,8 +207,77 @@ class FrmCheckSubmital(wx.Frame):
                     self.bxOutput.AppendText("Missing LENGTH field in Header\n")
             else:
                 self.bxOutput.AppendText("\nNo Valid Pipes file provided. Skipping Pipes import.")
-            key = (headList,headList2)
-            return key
+        elif self.rbxUtilitySelect.GetSelection() == 2:
+            if self.verify_input()[0]:
+                f = open(self.txtFeaturesPath.GetValue())
+                fheader = f.readlines()
+                fheader.reverse()
+                fheader = fheader.pop()
+                fheader = fheader.upper()
+                fheader = fheader.replace("NORTHING", "Y")
+                fheader = fheader.replace("EASTING", "X")
+                fheader = fheader.replace('\n', '')
+                fheader = fheader.split(",")
+
+                if "ID" in fheader:
+                    feat_key["ID"] = fheader.index("ID")
+                if "TYPE" in fheader:
+                    feat_key["TYPE"] = fheader.index("TYPE")
+                if "Y" in fheader:
+                    feat_key["Y"] = fheader.index("Y")
+                if "X" in fheader:
+                    feat_key["X"] = fheader.index("X")
+                if "ELEVATION" in fheader:
+                    feat_key["ELEVATION"] = fheader.index("ELEVATION")
+                if "DESCRIPTION" in fheader:
+                    feat_key["DESCRIPTION"] = fheader.index("DESCRIPTION")
+
+                if "ID" not in fheader:
+                    self.bxOutput.AppendText("Missing ID field in Header\n")
+                if "TYPE" not in fheader:
+                    self.bxOutput.AppendText("Missing TYPE field in Header\n")
+                if "Y" not in fheader:
+                    self.bxOutput.AppendText("Missing NORTHING field in Header\n")
+                if "X" not in fheader:
+                    self.bxOutput.AppendText("Missing EASTING field in Header\n")
+                if "DESCRIPTION" not in fheader:
+                    self.bxOutput.AppendText("Missing DESCRIPTION field in Header\n")
+            else:
+                self.bxOutput.AppendText("\nNo Valid Features file provided. Skipping Feature import.")
+            if self.verify_input()[1]:
+                p = open(self.txtPipesPath.GetValue())
+                pheader = p.readlines()
+                pheader.reverse()
+                pheader = pheader.pop()
+                pheader = pheader.upper()
+                pheader = pheader.replace('\n', '')
+                pheader = pheader.split(",")
+
+                if "ID" in pheader:
+                    pipe_key["ID"] = pheader.index("ID")
+                if "SIZE" in pheader:
+                    pipe_key["SIZE"] = pheader.index("SIZE")
+                if "MATERIAL" in pheader:
+                    pipe_key["MATERIAL"] = pheader.index("MATERIAL")
+                if "FEATUREID1" in pheader:
+                    pipe_key["FEATUREID1"] = pheader.index("FEATUREID1")
+                if "FEATUREID2" in pheader:
+                    pipe_key["FEATUREID2"] = pheader.index("FEATUREID2")
+
+                if "ID" not in pheader:
+                    self.bxOutput.AppendText("Missing ID field in Header\n")
+                if "SIZE" not in pheader:
+                    self.bxOutput.AppendText("Missing SIZE field in Header\n")
+                if "MATERIAL" not in pheader:
+                    self.bxOutput.AppendText("Missing MATERIAL field in Header\n")
+                if "FEATUREID1" not in pheader:
+                    self.bxOutput.AppendText("Missing FEATUREID1 field in Header\n")
+                if "FEATUREID2" not in pheader:
+                    self.bxOutput.AppendText("Missing FEATUREID2 field in Header\n")
+            else:
+                self.bxOutput.AppendText("\nNo Valid Pipes file provided. Skipping Pipes import.")
+        key = (feat_key,pipe_key)
+        return key
 
     def import_features(self, event):
         # Import features currently only works  on a premade file that has no header and
