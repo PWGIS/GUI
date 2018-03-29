@@ -1,7 +1,6 @@
-# This is my own work, with assistance from the wxGlade GUI wireframe composer
+# This is my own work (Miguel A Torres), with assistance from the wxGlade GUI wireframe composer
 # ------------------------------------------------------------------------------
-# Updates 1/26/2018: Created a method that populates a txtCtrl with the fileDialog file path and file name
-# ------------------------------------------------------------------------------
+
 
 import wx, arcpy, os
 
@@ -69,6 +68,7 @@ class FrmCheckSubmitall(wx.Frame):
         self.SetSizer(sizer_1)
         self.Layout()
         self.SetSize((400, 300))
+        self.SetMinSize(self.GetSize())
         # end wxGlade
 
     def dialog_select_features(self, event):
@@ -294,9 +294,9 @@ class FrmCheckSubmitall(wx.Frame):
             lstNodes.pop()
         env = arcpy.da.Editor("in_memory")
 
+    # def create_version():
     # def import_features(self):
     # def import_pipes(self):
-    # def create_version():
     # def push_updates():
 
 if __name__ == '__main__':
