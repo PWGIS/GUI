@@ -285,7 +285,9 @@ class FrmCheckSubmitall(wx.Frame):
         # Import features currently only works  on a premade file that has no header and
         # only has an X, and Y value delimited with a comma
         self.bxOutput.SetValue("")
-        Key = self.order_key()
+        key = self.order_key()
+        print key
+        self.create_version()
         #
         if os.path.exists(self.txtFeaturesPath.GetValue()):
             f = open(self.txtFeaturesPath.GetValue())
@@ -294,7 +296,14 @@ class FrmCheckSubmitall(wx.Frame):
             lstNodes.pop()
         env = arcpy.da.Editor("in_memory")
 
-    # def create_version():
+    def create_version(self):
+        self.bxOutput.AppendText("\n Creating Version...")
+        arcpy.CreateVersion_management("Database Connections/publiworks_TAX_SQL_Miguelto.sde", "MIGUELTO.UTIL_EDITS_MIGUELTO", "DigSubTest", "PROTECTED")
+        # arcpy.CreateVersion_management(parentSDE, "dbo.UTIL_EDITS_MIGUELTO", "DigImpVer", "PROTECTED")
+
+
+
+
     # def import_features(self):
     # def import_pipes(self):
     # def push_updates():
