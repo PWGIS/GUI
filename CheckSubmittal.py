@@ -5,8 +5,10 @@
 
 import wx, arcpy, os
 
+parentSDE = r"C:\Users\MiguelTo\AppData\Roaming\ESRI\Desktop10.3\ArcCatalog\publiworks_TAX_SQL_Miguelto.sde"
 
-class FrmCheckSubmital(wx.Frame):
+
+class FrmCheckSubmitall(wx.Frame):
     def __init__(self, *args, **kwds):
         kwds["style"] = kwds.get("style", 0) | wx.DEFAULT_FRAME_STYLE
         wx.Frame.__init__(self, *args, **kwds)
@@ -22,7 +24,7 @@ class FrmCheckSubmital(wx.Frame):
         self.btnClear = wx.Button(self, wx.ID_ANY, "Clear")
         self.btnZoom = wx.Button(self, wx.ID_ANY, "Zoom")
         self.btnRun = wx.Button(self, wx.ID_ANY, "Run", style=wx.BU_EXACTFIT)
-        self.btnRun.Bind(wx.EVT_BUTTON, self.import_features)
+        self.btnRun.Bind(wx.EVT_BUTTON, self.main)
 
         self.__set_properties()
         self.__do_layout()
@@ -279,7 +281,7 @@ class FrmCheckSubmital(wx.Frame):
         key = (feat_key,pipe_key)
         return key
 
-    def import_features(self, event):
+    def main(self, event):
         # Import features currently only works  on a premade file that has no header and
         # only has an X, and Y value delimited with a comma
         self.bxOutput.SetValue("")
@@ -292,8 +294,13 @@ class FrmCheckSubmital(wx.Frame):
             lstNodes.pop()
         env = arcpy.da.Editor("in_memory")
 
+    # def import_features(self):
+    # def import_pipes(self):
+    # def create_version():
+    # def push_updates():
+
 if __name__ == '__main__':
     app=wx.App()
-    frame = FrmCheckSubmital(parent=None, id=-1)
+    frame = FrmCheckSubmitall(parent=None, id=-1)
     frame.Show()
     app.MainLoop()
