@@ -282,29 +282,37 @@ class FrmCheckSubmitall(wx.Frame):
         return key
 
     def main(self, event):
-        # Import features currently only works  on a premade file that has no header and
-        # only has an X, and Y value delimited with a comma
         self.bxOutput.SetValue("")
+        if self.verify_input()[1] and not self.verify_input()[0]:
+            print "Pipes cannot be created without a features file."
+            return
         key = self.order_key()
         print key
         self.create_version()
-        #
-        if os.path.exists(self.txtFeaturesPath.GetValue()):
-            f = open(self.txtFeaturesPath.GetValue())
-            lstNodes = f.readlines()
-            lstNodes.reverse()
-            lstNodes.pop()
-        env = arcpy.da.Editor("in_memory")
+        self.import_features()
+        # if os.path.exists(self.txtFeaturesPath.GetValue()):
+        #     f = open(self.txtFeaturesPath.GetValue())
+        #     lstNodes = f.readlines()
+        #     lstNodes.reverse()
+        #     lstNodes.pop()
+        # env = arcpy.da.Editor("in_memory")
 
     def create_version(self):
         self.bxOutput.AppendText("\n Creating Version...")
         arcpy.CreateVersion_management("Database Connections/publiworks_TAX_SQL_Miguelto.sde", "MIGUELTO.UTIL_EDITS_MIGUELTO", "DigSubTest", "PROTECTED")
-        # arcpy.CreateVersion_management(parentSDE, "dbo.UTIL_EDITS_MIGUELTO", "DigImpVer", "PROTECTED")
-
-
-
 
     # def import_features(self):
+    #     if self.rbxUtilitySelect.GetSelection() == 0:
+    #         # Create Stormwater Layer in new version
+    #         arcpy.ChangeVersion_management("StormFeatures_Layer", "TRANSACTIONAL", "MIGUELTO.DigSubTest", "")
+    #         # Create InsertCursor
+    #         # Assign each value to a variable
+    #         # Insert the row with all values simultaneously
+    #     elif self.rbxUtilitySelect.GetSelection() == 1:
+    #         pass
+    #     elif self.rbxUtilitySelect.GetSelection() == 2:
+    #         pass
+
     # def import_pipes(self):
     # def push_updates():
 
