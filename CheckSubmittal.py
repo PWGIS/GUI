@@ -288,8 +288,8 @@ class FrmCheckSubmitall(wx.Frame):
             return
         key = self.order_key()
         print key
-        self.create_version()
-        self.import_features()
+        # self.create_version()
+        self.import_features(key[0])
         # if os.path.exists(self.txtFeaturesPath.GetValue()):
         #     f = open(self.txtFeaturesPath.GetValue())
         #     lstNodes = f.readlines()
@@ -301,20 +301,59 @@ class FrmCheckSubmitall(wx.Frame):
         self.bxOutput.AppendText("\n Creating Version...")
         arcpy.CreateVersion_management("Database Connections/publiworks_TAX_SQL_Miguelto.sde", "MIGUELTO.UTIL_EDITS_MIGUELTO", "DigSubTest", "PROTECTED")
 
-    # def import_features(self):
-    #     if self.rbxUtilitySelect.GetSelection() == 0:
-    #         # Create Stormwater Layer in new version
-    #         arcpy.ChangeVersion_management("StormFeatures_Layer", "TRANSACTIONAL", "MIGUELTO.DigSubTest", "")
-    #         # Create InsertCursor
-    #         # Assign each value to a variable
-    #         # Insert the row with all values simultaneously
-    #     elif self.rbxUtilitySelect.GetSelection() == 1:
-    #         pass
-    #     elif self.rbxUtilitySelect.GetSelection() == 2:
-    #         pass
+    def import_features(self, key):
+        if self.rbxUtilitySelect.GetSelection() == 0:
+            # Prepare Data File
+            f = open(self.txtFeaturesPath.GetValue())
+            data = f.readlines()
+            data.reverse()
+            data.pop()
+
+            # Create Stormwater Layer in new version
+            # arcpy.MakeFeatureLayer_management(parentSDE+r"\Publicworks.PUBLICWORKS.StormWater\Publicworks.PUBLICWORKS.swNodes", "StormFeatures_Layer")
+            swNodes = r"\Publicworks.PUBLICWORKS.StormWater\Publicworks.PUBLICWORKS.swNodes"
+            # arcpy.ChangeVersion_management("StormFeatures_Layer", "TRANSACTIONAL", "MIGUELTO.DigSubTest", "")
+            # Create InsertCursor
+            print parentSDE+swNodes
+            cur = arcpy.da.InsertCursor(parentSDE+swNodes, ("ASBUILTID", "TYPE", "X", "Y", "Z", "INVERT", "MATERIAL", "SHAPE@XY"))
+            # Begin Edit Session
+            Editor = arcpy.da.Editor( r"C:\Users\MiguelTo\AppData\Roaming\ESRI\Desktop10.3\ArcCatalog\publiworks_TAX_SQL_Miguelto.sde")
+
+            # Assign each value to a variable
+            try:
+                print(Editor.isEditing)
+                Editor.startEditing(True, False)
+                print(Editor.isEditing)
+                for node in data:
+                    node = node.upper()
+                    node = node.replace('\n', '')
+                    node = node.split(",")
+                    print node
+                    ABID = node[key['ID']]
+                    TYPE = node[key['TYPE']]
+                    X = node[key['X']]
+                    Y = node[key['Y']]
+                    Z = node[key["ELEVATION"]]
+                    INVERT = node[key["INVERT"]]
+                    XY = (float(X), float(Y))
+                    MATERIAL = node[key['MATERIAL']]
+                    print ABID +" "+ TYPE +" "+ X +" "+ Y +" "+ str(XY) +" "+ MATERIAL
+                    # Datum = [ABID,TYPE,X,Y,Z,INVERT,MATERIAL,XY]
+                    print ("Inserting row")
+                    cur.insertRow([ABID,TYPE,X,Y,Z,INVERT,MATERIAL,XY])
+                    print ("Row inserted.")
+            except Exception as e:
+                print(e.message)
+                # Insert the row with all values simultaneously
+            Editor.stopEditing(True)
+        elif self.rbxUtilitySelect.GetSelection() == 1:
+            pass
+        elif self.rbxUtilitySelect.GetSelection() == 2:
+            pass
 
     # def import_pipes(self):
     # def push_updates():
+
 
 if __name__ == '__main__':
     app=wx.App()
