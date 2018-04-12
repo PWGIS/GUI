@@ -4,10 +4,79 @@
 
 import wx, arcpy, os
 
-parentSDE = r"C:\Users\MiguelTo\AppData\Roaming\ESRI\Desktop10.3\ArcCatalog\publiworks_TAX_SQL_Miguelto.sde"
+parentSDE = "Database Connections/publicworks_tax_sql_publicworks.sde"
 
 
 class FrmCheckSubmitall(wx.Frame):
+    def main(self, event):
+        self.bxOutput.SetValue("")
+        if self.verify_input()[1] and not self.verify_input()[0]:
+            print "Pipes cannot be created without a features file."
+            return
+        key = self.order_key()
+        print key
+        # self.create_version()
+        self.import_features(key[0])
+        # if os.path.exists(self.txtFeaturesPath.GetValue()):
+        #     f = open(self.txtFeaturesPath.GetValue())
+        #     lstNodes = f.readlines()
+        #     lstNodes.reverse()
+        #     lstNodes.pop()
+        # env = arcpy.da.Editor("in_memory")
+
+    def import_features(self, key):
+        if self.rbxUtilitySelect.GetSelection() == 0:
+            # Prepare Data File
+            f = open(self.txtFeaturesPath.GetValue())
+            data = f.readlines()
+            data.reverse()
+            data.pop()
+
+            swNodes = "\Publicworks.PUBLICWORKS.StormWater\Publicworks.PUBLICWORKS.swNodes"
+            # Create InsertCursor
+            print parentSDE + swNodes
+            # cur = arcpy.da.InsertCursor(parentSDE+swNodes, ("ASBUILTID", "TYPE", "X", "Y", "Z", "INVERT", "MATERIAL", "SHAPE@XY"))
+            # Begin Edit Session
+            Editor = arcpy.da.Editor("Database Connections/publicworks_tax_sql_publicworks.sde")
+
+            # Assign each value to a variable
+            try:
+                with arcpy.da.InsertCursor(parentSDE + swNodes, (
+                "ASBUILTID", "TYPE", "X", "Y", "Z", "INVERT", "MATERIAL", "SHAPE@XY")) as cur:
+
+                    print(Editor.isEditing)
+                    Editor.startEditing(False)
+                    Editor.startOperation()
+                    print(Editor.isEditing)
+                    for node in data:
+                        node = node.upper()
+                        node = node.replace('\n', '')
+                        node = node.split(",")
+                        print node
+                        ABID = node[key['ID']]
+                        TYPE = node[key['TYPE']]
+                        X = node[key['X']]
+                        Y = node[key['Y']]
+                        Z = node[key["ELEVATION"]]
+                        INVERT = node[key["INVERT"]]
+                        XY = (float(X), float(Y))
+                        MATERIAL = node[key['MATERIAL']]
+                        print ABID + " " + TYPE + " " + X + " " + Y + " " + str(XY) + " " + MATERIAL
+                        # Datum = [ABID,TYPE,X,Y,Z,INVERT,MATERIAL,XY]
+                        print ("Inserting row")
+                        cur.insertRow([ABID, TYPE, X, Y, Z, INVERT, MATERIAL, XY])
+                        print ("Row inserted.\n SUCCESS!")
+                    Editor.stopOperation()
+                    Editor.stopEditing(True)
+            except Exception as e:
+                print(e.message)
+                # del cur
+                # Insert the row with all values simultaneously
+        elif self.rbxUtilitySelect.GetSelection() == 1:
+            pass
+        elif self.rbxUtilitySelect.GetSelection() == 2:
+            pass
+
     def __init__(self, *args, **kwds):
         kwds["style"] = kwds.get("style", 0) | wx.DEFAULT_FRAME_STYLE
         wx.Frame.__init__(self, *args, **kwds)
@@ -281,75 +350,9 @@ class FrmCheckSubmitall(wx.Frame):
         key = (feat_key,pipe_key)
         return key
 
-    def main(self, event):
-        self.bxOutput.SetValue("")
-        if self.verify_input()[1] and not self.verify_input()[0]:
-            print "Pipes cannot be created without a features file."
-            return
-        key = self.order_key()
-        print key
-        # self.create_version()
-        self.import_features(key[0])
-        # if os.path.exists(self.txtFeaturesPath.GetValue()):
-        #     f = open(self.txtFeaturesPath.GetValue())
-        #     lstNodes = f.readlines()
-        #     lstNodes.reverse()
-        #     lstNodes.pop()
-        # env = arcpy.da.Editor("in_memory")
-
     def create_version(self):
         self.bxOutput.AppendText("\n Creating Version...")
         arcpy.CreateVersion_management("Database Connections/publiworks_TAX_SQL_Miguelto.sde", "MIGUELTO.UTIL_EDITS_MIGUELTO", "DigSubTest", "PROTECTED")
-
-    def import_features(self, key):
-        if self.rbxUtilitySelect.GetSelection() == 0:
-            # Prepare Data File
-            f = open(self.txtFeaturesPath.GetValue())
-            data = f.readlines()
-            data.reverse()
-            data.pop()
-
-            # Create Stormwater Layer in new version
-            # arcpy.MakeFeatureLayer_management(parentSDE+r"\Publicworks.PUBLICWORKS.StormWater\Publicworks.PUBLICWORKS.swNodes", "StormFeatures_Layer")
-            swNodes = r"\Publicworks.PUBLICWORKS.StormWater\Publicworks.PUBLICWORKS.swNodes"
-            # arcpy.ChangeVersion_management("StormFeatures_Layer", "TRANSACTIONAL", "MIGUELTO.DigSubTest", "")
-            # Create InsertCursor
-            print parentSDE+swNodes
-            cur = arcpy.da.InsertCursor(parentSDE+swNodes, ("ASBUILTID", "TYPE", "X", "Y", "Z", "INVERT", "MATERIAL", "SHAPE@XY"))
-            # Begin Edit Session
-            Editor = arcpy.da.Editor( r"C:\Users\MiguelTo\AppData\Roaming\ESRI\Desktop10.3\ArcCatalog\publiworks_TAX_SQL_Miguelto.sde")
-
-            # Assign each value to a variable
-            try:
-                print(Editor.isEditing)
-                Editor.startEditing(True, False)
-                print(Editor.isEditing)
-                for node in data:
-                    node = node.upper()
-                    node = node.replace('\n', '')
-                    node = node.split(",")
-                    print node
-                    ABID = node[key['ID']]
-                    TYPE = node[key['TYPE']]
-                    X = node[key['X']]
-                    Y = node[key['Y']]
-                    Z = node[key["ELEVATION"]]
-                    INVERT = node[key["INVERT"]]
-                    XY = (float(X), float(Y))
-                    MATERIAL = node[key['MATERIAL']]
-                    print ABID +" "+ TYPE +" "+ X +" "+ Y +" "+ str(XY) +" "+ MATERIAL
-                    # Datum = [ABID,TYPE,X,Y,Z,INVERT,MATERIAL,XY]
-                    print ("Inserting row")
-                    cur.insertRow([ABID,TYPE,X,Y,Z,INVERT,MATERIAL,XY])
-                    print ("Row inserted.")
-            except Exception as e:
-                print(e.message)
-                # Insert the row with all values simultaneously
-            Editor.stopEditing(True)
-        elif self.rbxUtilitySelect.GetSelection() == 1:
-            pass
-        elif self.rbxUtilitySelect.GetSelection() == 2:
-            pass
 
     # def import_pipes(self):
     # def push_updates():
